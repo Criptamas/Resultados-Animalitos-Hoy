@@ -28,13 +28,13 @@ export default function Header({ scrolled }) {
           </span>
         </div>
         <div className="flex items-center gap-4">
-            <a href="http://youtube.com/@elprospectove" aria-label="Youtube" className="opacity-80 hover:opacity-100 transition-opacity focus-visible:ring-2 focus-visible:ring-amber-400 rounded">
+            <a target="_blank" rel="noopener noreferrer" href="http://youtube.com/@elprospectove" aria-label="Youtube" className="opacity-80 hover:opacity-100 transition-opacity focus-visible:ring-2 focus-visible:ring-amber-400 rounded">
             <Youtube size={scrolled ? 16 : 19} color={COLORS.cream} />
           </a>
-          <a href="http://instagram.com/elprospectove" aria-label="Instagram" className="opacity-80 hover:opacity-100 transition-opacity focus-visible:ring-2 focus-visible:ring-amber-400 rounded">
+          <a  target="_blank" rel="noopener noreferrer" href="http://instagram.com/elprospectove" aria-label="Instagram" className="opacity-80 hover:opacity-100 transition-opacity focus-visible:ring-2 focus-visible:ring-amber-400 rounded">
             <Instagram size={scrolled ? 16 : 19} color={COLORS.cream} />
           </a>
-          <a href="https://www.facebook.com/elbatacazove" aria-label="Facebook" className="opacity-80 hover:opacity-100 transition-opacity focus-visible:ring-2 focus-visible:ring-amber-400 rounded">
+          <a target="_blank" rel="noopener noreferrer" href="https://www.facebook.com/elbatacazove" aria-label="Facebook" className="opacity-80 hover:opacity-100 transition-opacity focus-visible:ring-2 focus-visible:ring-amber-400 rounded">
             <Facebook size={scrolled ? 16 : 19} color={COLORS.cream} />
           </a>
           <a href={TELEGRAM_LINK} target="_blank" rel="noopener noreferrer" aria-label="Telegram" className="opacity-80 hover:opacity-100 transition-opacity focus-visible:ring-2 focus-visible:ring-amber-400 rounded">
