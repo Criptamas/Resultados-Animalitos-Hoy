@@ -6,7 +6,7 @@ import FloatingPlayButton from "./components/FloatingPlayButton.jsx";
 import { LOTERIAS as LOTERIAS_MOCK } from "./data/mockResults.js";
 import { fetchResultados } from "./services/api.js";
 import { COLORS } from "./theme.js";
-import { Analytics } from "@vercel/analytics/next"
+import { Analytics } from "@vercel/analytics/react"
 
 
 export default function App() {
