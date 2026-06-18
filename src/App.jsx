@@ -6,6 +6,8 @@ import FloatingPlayButton from "./components/FloatingPlayButton.jsx";
 import { LOTERIAS as LOTERIAS_MOCK } from "./data/mockResults.js";
 import { fetchResultados } from "./services/api.js";
 import { COLORS } from "./theme.js";
+import { Analytics } from "@vercel/analytics/next"
+
 
 export default function App() {
   const [loterias, setLoterias] = useState(LOTERIAS_MOCK);
@@ -89,6 +91,7 @@ useEffect(() => {
       </footer>
 
       <FloatingPlayButton />
+      <Analytics />
     </div>
   );
 }
