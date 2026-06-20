@@ -18,13 +18,13 @@ export default function Header({ scrolled }) {
             className={`transition-all duration-300 ${scrolled ? "text-base" : "text-2xl"}`}
             style={{ fontFamily: "'Anton', sans-serif", color: COLORS.gold, letterSpacing: "0.03em" }}
           >
-            ANIMALITOS
+          EL BATACAZO
           </span>
           <span
             className={`hidden sm:inline transition-all duration-300 ${scrolled ? "text-xs" : "text-sm"}`}
             style={{ color: COLORS.cream, fontFamily: "'Space Mono', monospace" }}
           >
-            HOY
+            VENEZUELA
           </span>
         </div>
         <div className="flex items-center gap-4">

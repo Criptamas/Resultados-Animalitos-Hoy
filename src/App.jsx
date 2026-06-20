@@ -3,57 +3,64 @@ import Header from "./components/Header.jsx";
 import LotterySelector from "./components/LotterySelector.jsx";
 import ResultsModule from "./components/ResultsModule.jsx";
 import FloatingPlayButton from "./components/FloatingPlayButton.jsx";
-import { LOTERIAS as LOTERIAS_MOCK } from "./data/mockResults.js";
-import { fetchResultados } from "./services/api.js";
+import LoadingScreen from "./components/LoadingScreen.jsx";
+import { loadCache, fetchResultados } from "./services/api.js";
 import { COLORS } from "./theme.js";
-import { Analytics } from "@vercel/analytics/react"
+import { TerminosModal, TerminosButton } from "./components/TerminosModal.jsx";
 
-
+/*
+  FLUJO:
+  ┌─ ¿Hay caché en localStorage? ─────────────────────────────────────────┐
+  │  SÍ  → Mostrar resultados del caché de inmediato                      │
+  │        + fetch en background → si responde: actualizar + guardar       │
+  │  NO  → Mostrar <LoadingScreen> mientras fetch completa                 │
+  │        → Cuando responde: guardar + mostrar resultados                 │
+  │                                                                        │
+  │  Si la API responde [] o falla → mantener lo que hay                  │
+  └────────────────────────────────────────────────────────────────────────┘
+*/
 export default function App() {
-  const [loterias, setLoterias] = useState(LOTERIAS_MOCK);
-  const [fuente, setFuente] = useState("mock"); // "mock" | "api"
-  const [activeId, setActiveId] = useState(LOTERIAS_MOCK[0].id);
-  const [scrolled, setScrolled] = useState(false);
+  const cached = useMemo(() => loadCache(), []);
 
-useEffect(() => {
-  fetchResultados().then((data) => {
-    console.log("RESPUESTA API:", data);
+  // null = primera visita sin caché → mostramos LoadingScreen
+  const [loterias, setLoterias]   = useState(cached);
+  const [activeId, setActiveId]   = useState(cached?.[0]?.id ?? null);
+  const [scrolled, setScrolled]   = useState(false);
+  const [apiViva, setApiViva]     = useState(false); // true una vez que la API responde con datos
+  const [verTerminos, setVerTerminos] = useState(false);
 
-    if (data) {
-      setLoterias(data);
-      setFuente("api");
-      setActiveId(data[0].id);
-    }
-  });
-}, []);
-
-  // Header más fino al hacer scroll
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 30);
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Intenta traer los datos reales de backend.
   useEffect(() => {
     fetchResultados().then((data) => {
-      if (data) {
-        setLoterias(data);
-        setFuente("api");
-        setActiveId(data[0].id);
-      }
+      if (!data) return; // [] o error → no tocamos el estado
+      setLoterias(data);
+      setApiViva(true);
+      setActiveId((prev) => {
+        // Conservamos la pestaña activa si sigue existiendo, si no, la primera.
+        return data.some((l) => l.id === prev) ? prev : data[0].id;
+      });
     });
   }, []);
 
   const loteriaActiva = useMemo(
-    () => loterias.find((l) => l.id === activeId) || loterias[0],
+    () => loterias?.find((l) => l.id === activeId) ?? loterias?.[0],
     [loterias, activeId]
   );
 
   const hoyTexto = useMemo(() => {
-    const texto = new Date().toLocaleDateString("es-VE", { weekday: "long", day: "numeric", month: "long" });
-    return texto.charAt(0).toUpperCase() + texto.slice(1);
+    const t = new Date().toLocaleDateString("es-VE", {
+      weekday: "long", day: "numeric", month: "long",
+    });
+    return t.charAt(0).toUpperCase() + t.slice(1);
   }, []);
+
+  // Primera visita sin caché: mostrar pantalla de carga hasta que la API responda.
+  if (!loterias) return <LoadingScreen />;
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: COLORS.navy }}>
@@ -61,37 +68,54 @@ useEffect(() => {
       <div className="h-16 sm:h-20" />
 
       <section className="px-5 pt-10 pb-6 max-w-6xl mx-auto">
+        {/* Indicador de estado */}
         <div className="flex items-center gap-2 mb-2">
-          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS.red }} />
-          <span className="text-xs uppercase tracking-widest" style={{ color: COLORS.red, fontFamily: "'Space Mono', monospace" }}>
-            En vivo · actualiza cada hora
+          <span
+            className="w-2 h-2 rounded-full flex-shrink-0"
+            style={{
+              backgroundColor: apiViva ? COLORS.green : COLORS.gold,
+              boxShadow: apiViva ? `0 0 6px ${COLORS.green}` : "none",
+            }}
+          />
+          <span
+            className="text-xs uppercase tracking-widest"
+            style={{
+              color: apiViva ? COLORS.green : "rgba(247,243,232,0.45)",
+              fontFamily: "'Space Mono', monospace",
+            }}
+          >
+            {apiViva ? "En vivo · datos de hoy" : "Resultados del sorteo anterior · Hasta el momento..."}
           </span>
         </div>
-        <h1 className="text-5xl sm:text-6xl leading-none" style={{ fontFamily: "'Anton', sans-serif", color: COLORS.cream, letterSpacing: "0.02em" }}>
+
+        <h1
+          className="text-5xl sm:text-6xl leading-none"
+          style={{ fontFamily: "'Anton', sans-serif", color: COLORS.cream, letterSpacing: "0.02em" }}
+        >
           RESULTADOS
         </h1>
-        <p className="mt-2 text-sm sm:text-base" style={{ color: "rgba(247,243,232,0.65)" }}>
-          {hoyTexto} — Selecciona tu lotería para ver los 12 sorteos del día.
+        <p className="mt-2 text-sm" style={{ color: "rgba(247,243,232,0.55)" }}>
+          {hoyTexto}
         </p>
-
-        {fuente === "mock" && (
-          <p className="mt-3 text-xs inline-block px-3 py-1 rounded-full" style={{ backgroundColor: "rgba(242,183,5,0.12)", color: COLORS.gold }}>
-            Mostrando datos de ejemplo — conecta tu API real en .env (VITE_API_URL)
-          </p>
-        )}
       </section>
 
       <LotterySelector loterias={loterias} activeId={activeId} onSelect={setActiveId} />
-      <ResultsModule loteria={loteriaActiva} />
+
+      {loteriaActiva && <ResultsModule loteria={loteriaActiva} />}
 
       <footer className="px-5 pb-28 max-w-6xl mx-auto text-center">
-        <p className="text-xs" style={{ color: "rgba(247,243,232,0.4)" }}>
+        <p className="text-xs" style={{ color: "rgba(247,243,232,0.3)" }}>
           Resultados con fines informativos · Juega con responsabilidad +18
         </p>
+
+
+        <p  className="text-xs" style={{ color: "rgba(247,243,232,0.3)" }}> Al usar nuestro sitio web usted acepta nuestros:  <TerminosButton onClick={() => setVerTerminos(true)} /> </p>
       </footer>
 
       <FloatingPlayButton />
-      <Analytics />
+
+{verTerminos && <TerminosModal onClose={() => setVerTerminos(false)} />}
+    
     </div>
   );
 }
